@@ -1,0 +1,31 @@
+---
+- name: Configure the AWS web server
+  hosts: web
+  become: true
+  tasks:
+    - name: Refresh apt package cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+    - name: Install Nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+    - name: Copy website homepage
+      ansible.builtin.copy:
+        src: ../app/index.html
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart Nginx
+    - name: Ensure Nginx is enabled and running
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+  handlers:
+    - name: Restart Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
